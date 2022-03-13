@@ -1,4 +1,5 @@
-object GUI extends App{
+
+object GUI extends App {
   println("Hello")
   println("It works")
 }
