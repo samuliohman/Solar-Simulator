@@ -1,7 +1,3 @@
 Project report 16.3.2022
-Commits:
-12.3.Added scala-swing to sbt. Created a basic window with some buttons and text boxes.
-13.3 Basic layout for the simulation and most of the buttons created
-
-In conclusion, we have a basic GUI layout. The left bar on the GUI still needs some work but everything else looks to be in the right place.
-
+I have a basic GUI layout. The left bar on the GUI still needs some work but everything else looks to be in the right place.
+Time spent so far is around 15 hours, and I'm on schedule.
