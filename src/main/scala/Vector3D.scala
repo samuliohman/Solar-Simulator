@@ -8,8 +8,8 @@ trait fullVector3D {
   def z: Double
 
   def operation(another: fullVector3D, operation: (Double, Double) => Double) = {
-    this match {
-      case Vector3D(x, y, z) => Vector3D(operation(this.x, another.x), operation(this.y, another.y), operation(this.z, another.z))
+    (this, another) match {
+      case (Vector3D(x1, y1, z1), Vector3D(x2, y2, z2)) => Vector3D(operation(x1, x2), operation(y1, y2), operation(z1, z2))
       case _ => throw new Exception("Unknown fullVector type")
     }
   }
