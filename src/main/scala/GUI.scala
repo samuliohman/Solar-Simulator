@@ -1,11 +1,11 @@
 import java.awt.event.ActionListener
 import java.awt.{Color, RenderingHints}
+import javax.sound.midi.SysexMessage
 import scala.swing._
 
 /** TODO Remove mock bodies */
 
 object GUI extends SimpleSwingApplication {
-
   val mockBody1 = Seq(1.123, 1.123, 1.123, 1.123, 1.123, 1.123)
   val mockBody2 = Seq(2.456, 2.456, 2.456, 2.456, 2.456, 2.456)
   val mockBody3 = Seq(4.972, 4.972, 4.972, 4.972, 4.972, 4.972)
@@ -17,29 +17,28 @@ object GUI extends SimpleSwingApplication {
     val simulationWidth = 1024
     val simulationHeight = 576
 
-    var angle: Double = 0
+    //Creates the simulation object
+    val simulation = new SolarSim
+
+    //Some helper variables for rendering and calculating
+    val center = (((simulationWidth) / 2), ((simulationHeight) / 2))
+    var lastFrame = System.nanoTime
 
     /** Creates the part of the screen where the simulations occurs */
     val simulationScreen = new Panel {
-
       //Overriding the default method enables us to draw our own graphics.
       override def paintComponent(g: Graphics2D) = {
-
-
-        // Paint on the old image a rectangle with bright blue (red=80, green=180, blue=235)
+        // Paint on the background with bright blue
         g.setColor(new Color(39, 40, 49))
         g.fillRect(0, 0, simulationWidth, simulationHeight)
-        g.setColor(new Color(245, 235, 45))
-        val sunRadius = 100
-        val center = (((simulationWidth - sunRadius) / 2), ((simulationHeight - sunRadius) / 2))
-        g.fillOval(center._1 + (sunRadius * math.cos(angle)).toInt, center._2 + (sunRadius * math.sin(angle)).toInt, sunRadius, sunRadius)
-        angle += 0.01
 
         // Ask Graphics2D to provide us smoother graphics, i.e., antialising
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
-        // change paint color to white and ask the space to redraw itself.
-        g.setColor(Color.white)
+
+        simulation.update(System.nanoTime - lastFrame)
+        simulation.paint(g, center)
+        lastFrame = System.nanoTime
       }
     }
     //Sets the size of the simulation screen (which doesn't contain left and top bar)
@@ -54,7 +53,7 @@ object GUI extends SimpleSwingApplication {
     // This event listener and swing timer allow periodic repetitive
     // activity in the event listening thread. The game is light enough
     // to be drawn in the thread without additional buffers or threads.
-    var oldTime = System.nanoTime()
+    var oldTime = System.nanoTime
     var frames = 0
     val listener = new ActionListener() {
       def actionPerformed(e: java.awt.event.ActionEvent) = {
