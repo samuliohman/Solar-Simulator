@@ -8,7 +8,10 @@ class Body(val name: String, val mass: Double, val color: Color, paramLocation: 
 
   def velocity = pVelocity
 
-  def move(timeStep: Double) = pLocation = pLocation + (pVelocity * Vector3D(timeStep, timeStep, timeStep))
+  //Changes the location of the planet based on velocity and elapsed time
+  def move(time: Double) = pLocation = pLocation + (pVelocity * Vector3D(time, time, time))
 
-  def applyForce(force: Vector3D) = pVelocity = pVelocity + (force / mass)
+
+  //Changes the velocity of the planet based on applied force
+  def applyForce(force: Vector3D, time: Double) = pVelocity = pVelocity + ((force / mass) * time)
 }

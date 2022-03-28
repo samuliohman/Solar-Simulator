@@ -7,7 +7,7 @@ object Calculations {
   }
 
   def calculateForces(current: Body, bodies: Seq[Body]): Vector3D = {
-    val otherBodies = bodies.filterNot( _ == current)
+    val otherBodies = bodies.filterNot( _ == current )
     var sumOfForces = Vector3D(0,0,0)
     for(body <- otherBodies){
       sumOfForces += calculateForce(current, body)
