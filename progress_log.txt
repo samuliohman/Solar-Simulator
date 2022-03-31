@@ -1,3 +1,8 @@
 Project report 16.3.2022
 I have a basic GUI layout. The left bar on the GUI still needs some work but everything else looks to be in the right place.
 Time spent so far is around 15 hours, and I'm on schedule.
+
+Project report 31.3.2022
+Around half of GUI functionality added. Adjusting time step now works and the GUI shows correct location and velocity data of the selected planet.
+All the pre-planned classes and objects have been created with atleast basic functionality.
+Next up: adding the remaining GUI features and making the scale and the location of the planets comparable to real world
