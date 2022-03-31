@@ -11,7 +11,7 @@ class SolarSim(val simulationWidth: Int, val simulationHeight: Int) {
 
   //Check if input was a double between 1500 and 0. Then apply new timeStep
   def changeTimeStep(newStep: String) =
-    if(newStep.toDoubleOption.nonEmpty && newStep.toDouble < 1500 && newStep.toDouble > 0) timeStep = newStep.toDouble else throw new Exception("Time step must be a double between 0 and 1500")
+    if(newStep.toDoubleOption.nonEmpty) timeStep = newStep.toDouble else throw new Exception("Time step must be a double")
 
   //Paints all the bodies in the simulation
   def paint(graphics: Graphics2D, center: (Int, Int)): Unit = {
