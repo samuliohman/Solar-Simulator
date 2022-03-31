@@ -1,6 +1,4 @@
 import java.awt.event.ActionListener
-import java.awt.{Color, RenderingHints}
-import javax.sound.midi.SysexMessage
 import scala.swing._
 import scala.swing.event.ButtonClicked
 
@@ -36,14 +34,16 @@ object GUI extends SimpleSwingApplication {
     simulationScreen.maximumSize = new Dimension(simulationWidth, simulationHeight)
 
     //Adds the panel that has all the different elements to current window
-    val (fullScreen, allButtons) = createFullScreen(simulationScreen, simulation)
+    val (fullScreen, allButtons, allTextFields) = createFullScreen(simulationScreen, simulation)
     contents = fullScreen
 
     //Add listener to react to button clicks
     allButtons.foreach(listenTo(_))
     reactions += {
-      case ButtonClicked(b) =>
-        println(b.text)
+      case ButtonClicked(b) => b.text match{
+        case "Apply time step" => simulation.changeTimeStep(allTextFields.head.text)
+        case _ =>
+      }
     }
 
     // This event listener and swing timer allow periodic repetitive
@@ -53,7 +53,7 @@ object GUI extends SimpleSwingApplication {
     val listener = new ActionListener() {
       def actionPerformed(e: java.awt.event.ActionEvent) = {
         frames += 1
-        if (frames % 20 == 0) {
+        if (frames % 100 == 0) {
           println("fps " + fps(mostRecentFrame, 1))
           mostRecentFrame = System.nanoTime
         }
@@ -65,7 +65,7 @@ object GUI extends SimpleSwingApplication {
     // when the space moves forward and the screen is redrawn.
     // This code therefore allows animation
     var mostRecentFrame = System.nanoTime
-    val timer = new javax.swing.Timer(0, listener)
+    val timer = new javax.swing.Timer(1, listener)
     timer.start()
   }
 
@@ -75,9 +75,9 @@ object GUI extends SimpleSwingApplication {
 
   /** Here we create all the different buttons and text boxes for the GUI */
   //Creates a panel consisting all the different elements
-  def createFullScreen(simulationScreen: Panel, simulation: SolarSim): (BoxPanel, Seq[Button]) = {
+  def createFullScreen(simulationScreen: Panel, simulation: SolarSim): (BoxPanel, Seq[Button], Seq[TextField]) = {
     val topAndSim = new BoxPanel(Orientation.Vertical)
-    val (topBar, topButtons) = createTopBar()
+    val (topBar, topButtons, topTextFields) = createTopBar()
     topAndSim.contents += topBar
     topAndSim.contents += simulationScreen
 
@@ -86,7 +86,7 @@ object GUI extends SimpleSwingApplication {
     fullPanel.contents += leftBar
     fullPanel.contents += topAndSim
 
-    (fullPanel, (topButtons ++ leftButton))
+    (fullPanel, (topButtons ++ leftButton), topTextFields)
   }
 
   def getPlanetInfo(planetName: String, simulation: SolarSim): GridPanel = {
@@ -103,7 +103,7 @@ object GUI extends SimpleSwingApplication {
   }
 
   //Creates the left segment of the screen where there are buttons and text boxes
-  def createLeftBar(simulation: SolarSim) = {
+  def createLeftBar(simulation: SolarSim): (BoxPanel, Seq[Button]) = {
     //Creates the upper part of the left bar where information about the planets is presented
     val infoLabelGrid = new GridPanel(2, 1) {
       contents += new Label("Here you can see information")
@@ -164,7 +164,7 @@ object GUI extends SimpleSwingApplication {
 
 
   //Creates the upper segment of the screen where there are buttons and text boxes
-  def createTopBar() = {
+  def createTopBar(): (BoxPanel, Seq[Button], Seq[TextField]) = {
     val labelFontSize = 30
 
     //Creating the buttons and text box concerning camera angles
@@ -172,10 +172,8 @@ object GUI extends SimpleSwingApplication {
     camLabel.font = camLabel.font.deriveFont(0, labelFontSize)
 
     val camButtons = new GridPanel(0, 3)
-    val buttons: Seq[Button] = Seq(new Button("xy -plane"), new Button("xy -plane"), new Button("yz -plane"))
-    camButtons.contents += buttons(0)
-    camButtons.contents += buttons(1)
-    camButtons.contents += buttons(2)
+    var buttons: Seq[Button] = Seq(new Button("xy -plane"), new Button("xz -plane"), new Button("yz -plane"))
+    buttons.foreach( camButtons.contents += _ )
 
     val camPanel = new GridPanel(2, 0)
     camPanel.contents += camLabel
@@ -184,11 +182,12 @@ object GUI extends SimpleSwingApplication {
     //Creating the buttons and text box concerning the adjustment of time step
     val timeStepLabel = new Label("Time step")
     timeStepLabel.peer.setFont(timeStepLabel.peer.getFont.deriveFont(0, labelFontSize))
-    val timeStepTextField = new TextField("Please input a double", 25)
+    val timeStepTextField = new TextField("300.0", 25)
 
     val timeStepElements = new BoxPanel(Orientation.Horizontal)
     timeStepElements.contents += timeStepTextField
-    timeStepElements.contents += new Button("Apply time step")
+    buttons = buttons :+ new Button("Apply time step")
+    timeStepElements.contents += buttons(3)
 
     val timeStepPanel = new GridPanel(2, 0)
     timeStepPanel.contents += timeStepLabel
@@ -199,6 +198,6 @@ object GUI extends SimpleSwingApplication {
     horizontalPanel.contents += camPanel
     horizontalPanel.contents += timeStepPanel
 
-    (horizontalPanel, buttons)
+    (horizontalPanel, buttons, Seq(timeStepTextField))
   }
 }

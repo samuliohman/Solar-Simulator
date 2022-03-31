@@ -9,6 +9,10 @@ class SolarSim(val simulationWidth: Int, val simulationHeight: Int) {
   bodies += new Body("Earth", 10e12, Color.cyan, Vector3D(0, -100, 0), Vector3D(1.2, 0, 0))
   bodies += new Body("Mars", 10e12, Color.green, Vector3D(0, 150, 0), Vector3D(-1.0, 0, 0))
 
+  //Check if input was a double between 1500 and 0. Then apply new timeStep
+  def changeTimeStep(newStep: String) =
+    if(newStep.toDoubleOption.nonEmpty && newStep.toDouble < 1500 && newStep.toDouble > 0) timeStep = newStep.toDouble else throw new Exception("Time step must be a double between 0 and 1500")
+
   //Paints all the bodies in the simulation
   def paint(graphics: Graphics2D, center: (Int, Int)): Unit = {
     // Paint on the background with bright blue

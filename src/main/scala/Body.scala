@@ -11,7 +11,6 @@ class Body(val name: String, val mass: Double, val color: Color, paramLocation: 
   //Changes the location of the planet based on velocity and elapsed time
   def move(time: Double) = pLocation = pLocation + (pVelocity * Vector3D(time, time, time))
 
-
   //Changes the velocity of the planet based on applied force
   def applyForce(force: Vector3D, time: Double) = pVelocity = pVelocity + ((force / mass) * time)
 }
