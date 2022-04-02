@@ -46,6 +46,9 @@ object GUI extends SimpleSwingApplication {
     reactions += {
       case ButtonClicked(b) => b.text match {
         case "Apply time step" => simulation.changeTimeStep(allTextFields.head.text)
+        case "xy -plane" => simulation.changeViewAngle("xy")
+        case "xz -plane" => simulation.changeViewAngle("xz")
+        case "yz -plane" => simulation.changeViewAngle("yz")
         case _ =>
       }
     }

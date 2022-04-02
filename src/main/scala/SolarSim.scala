@@ -2,28 +2,41 @@ import java.awt.{Color, RenderingHints}
 import scala.collection.mutable
 import scala.swing.Graphics2D
 
-class SolarSim(val simulationWidth: Int, val simulationHeight: Int) {
+class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: Int) {
   private var timeStep: Double = 3 * 86400 // 86400 seconds in one day, so default speed of simulation is x days per second
+  private var viewAngle = "xy" //Set default view angle
   val bodies = mutable.Buffer[Body]()
   bodies += new Body("Sun", 1.99847e30, Color.yellow, Vector3D(0, 0, 0), Vector3D(0, 0, 0))
   bodies += new Body("Earth", 5.9722e24, Color.green, Vector3D(0, 150e9, 0), Vector3D(30000, 0, 0))
   bodies += new Body("Satellite", 5e5, Color.cyan, Vector3D(30e9, 50e9, 0), Vector3D(30000, -50000, 0))
 
-
   //Some helper attributes for drawing planets in correct locations
   //Set the width of simulation screen in kilometers and calculate simulation height from aspect ratio and width
-  val widthOfSimulation: Double = 600e9
-  val heightOfSimulation: Double = simulationHeight.toDouble / simulationWidth * widthOfSimulation
+  val widthOfSimulation = 600e9
+  val heightOfSimulation = simulationHeightInPixels.toDouble / simulationWidthInPixels * widthOfSimulation
 
-  //Check if input was a double between 1500 and 0. Then apply new timeStep
+  //Function for updating camera angle
+  def changeViewAngle(newAngle: String) = viewAngle = newAngle
+
+  //Check that new time step is a double and update the time step
+  //time step scale: if time step is one, it means second in real life means a day in simulation
   def changeTimeStep(newStep: String) =
     if (newStep.toDoubleOption.nonEmpty) timeStep = newStep.toDouble * 86400 else throw new Exception("Time step must be a double")
 
   //Function that takes coordinates in meters as paremeter and the planet size and return coordinates in pixels
   def coordinatesToPixels(location: Vector3D, size: Double): Vector3D = {
-    val locationCentered = location + Vector3D((widthOfSimulation / 2), heightOfSimulation / 2, 0)
+    //Set the correct point of view according to viewAngle
+    var locationCentered = viewAngle match {
+      case "xy" => Vector3D(location.x + widthOfSimulation / 2, location.y + heightOfSimulation / 2, 0)
+      case "xz" => Vector3D(location.x + widthOfSimulation / 2, location.z + heightOfSimulation / 2, 0)
+      case "yz" => Vector3D(location.y + widthOfSimulation / 2, location.z + heightOfSimulation / 2, 0)
+      case _ => {
+        Vector3D(0,0,0)
+        throw new Exception("Unkown view angle")
+      }
+    }
     val locationNormalized = locationCentered / Vector3D(widthOfSimulation, heightOfSimulation, 0)
-    val locationInPixels = locationNormalized * Vector3D(simulationWidth, simulationHeight, 0)
+    val locationInPixels = locationNormalized * Vector3D(simulationWidthInPixels, simulationHeightInPixels, 0)
     locationInPixels - Vector3D(size / 2, size / 2, 0)
   }
 
@@ -31,7 +44,7 @@ class SolarSim(val simulationWidth: Int, val simulationHeight: Int) {
   def paint(graphics: Graphics2D): Unit = {
     // Paint on the background with bright blue
     graphics.setColor(new Color(39, 40, 49))
-    graphics.fillRect(0, 0, simulationWidth, simulationHeight)
+    graphics.fillRect(0, 0, simulationWidthInPixels, simulationHeightInPixels)
 
     // Ask Graphics2D to provide us smoother graphics, i.e., antialising
     graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
