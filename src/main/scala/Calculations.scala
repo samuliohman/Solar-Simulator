@@ -1,15 +1,24 @@
 object Calculations {
+  final val GRAVITATIONAL_CONSTANT = 6.6743015e-11
+
   def calculateForce(b1: Body, b2: Body): Vector3D = {
-    val differenceInPosition = (b2.location - b1.location)
-    val distanceSquared = differenceInPosition.power(2)
-    val distance = math.sqrt(distanceSquared.x +distanceSquared.y + distanceSquared.z)
-    differenceInPosition * (0.4*math.pow(10, -18) * b1.mass*b2.mass/distance)
+    /** Gravitational force equation: F=(Gc*m1*m2/r^3)*rc, where Gc is graviational constant and rc is vector component for example rx or ry */
+    val difInPosition = (b2.location - b1.location) // =Vector3D(dx, dy, dz)
+    val OneDimensionalDif = // =sqrt(dx.abs^2 + dy.abs^2 + dz.abs^2)
+      math.sqrt(difInPosition.x * difInPosition.x + difInPosition.y * difInPosition.y + difInPosition.z * difInPosition.z)
+    val distanceCubed = OneDimensionalDif * OneDimensionalDif * OneDimensionalDif // =r^3
+
+    val forceWithoutRComponent = GRAVITATIONAL_CONSTANT * b1.mass * b2.mass / distanceCubed //=Gc * m1 * m2 / r^3
+    val fx = difInPosition.x * forceWithoutRComponent //forceWithoutRComponent * rx
+    val fy = difInPosition.y * forceWithoutRComponent //forceWithoutRComponent * ry
+    val fz = difInPosition.z * forceWithoutRComponent //forceWithoutRComponent * rz
+    Vector3D(fx, fy, fz)
   }
 
   def calculateForces(current: Body, bodies: Seq[Body]): Vector3D = {
-    val otherBodies = bodies.filterNot( _ == current )
-    var sumOfForces = Vector3D(0,0,0)
-    for(body <- otherBodies){
+    val otherBodies = bodies.filterNot(_ == current)
+    var sumOfForces = Vector3D(0, 0, 0)
+    for (body <- otherBodies) {
       sumOfForces += calculateForce(current, body)
     }
     sumOfForces

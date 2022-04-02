@@ -16,9 +16,6 @@ object GUI extends SimpleSwingApplication {
 
     //Creates the simulation object
     val simulation = new SolarSim(simulationWidth, simulationHeight)
-    //Some helper variables for rendering and calculating
-    val center = (((simulationWidth) / 2), ((simulationHeight) / 2))
-
 
     /** Creates the part of the screen where the simulations occurs */
     val simulationScreen = new Panel {
@@ -26,7 +23,7 @@ object GUI extends SimpleSwingApplication {
       override def paintComponent(g: Graphics2D): Unit = {
         simulation.update(System.nanoTime - mostRecentFrame)
         mostRecentFrame = System.nanoTime
-        simulation.paint(g, center)
+        simulation.paint(g)
       }
     }
 
@@ -60,22 +57,23 @@ object GUI extends SimpleSwingApplication {
     val listener = new ActionListener() {
       //Methods that doesn't happen every frame are located here
       //Print fps every 100th frame
-      //update planet info labels every 10th frame
+      //update planet info labels every 5th frame
       def actionPerformed(e: java.awt.event.ActionEvent) = {
         frames += 1
-        if(frames % 10 == 0) updatePlaneInfo()
+        if(frames % 5 == 0) updatePlaneInfo()
         if (frames % 100 == 0) {
-          println("fps " + fps(mostRecentFrame, 1))
-          mostRecentFrame = System.nanoTime
+          println("fps " + fps(lastFPSupdate, 100))
+          lastFPSupdate = System.nanoTime
         }
         simulationScreen.repaint()
       }
     }
 
-    // Timer sends ActionEvent to ActionListener every 5ms,
-    // when the space moves forward and the screen is redrawn.
+    // Timer sends ActionEvent to ActionListener as often as possible,
+    // when the simulation moves forward and the screen is redrawn.
     // This code therefore allows animation
     var mostRecentFrame = System.nanoTime
+    var lastFPSupdate = System.nanoTime
     val timer = new javax.swing.Timer(0, listener)
     timer.start()
   }
