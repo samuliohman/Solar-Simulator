@@ -31,7 +31,7 @@ class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: I
       case "xz" => Vector3D(location.x + widthOfSimulation / 2, location.z + heightOfSimulation / 2, 0)
       case "yz" => Vector3D(location.y + widthOfSimulation / 2, location.z + heightOfSimulation / 2, 0)
       case _ => {
-        Vector3D(0,0,0)
+        Vector3D(0, 0, 0)
         throw new Exception("Unkown view angle")
       }
     }
@@ -49,7 +49,14 @@ class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: I
     // Ask Graphics2D to provide us smoother graphics, i.e., antialising
     graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
-    for (body <- bodies) {
+    //Sort all the bodies according to viewAngle so that a correct body is drawn on top of the body which is "underneath"
+    val bodiesSorted = bodies.sortBy(body => viewAngle match {
+      case "xy" => body.location.z
+      case "xz" => body.location.y
+      case "yz" => body.location.x
+      case _ => body.mass
+    })
+    for (body <- bodiesSorted) {
       //Set the correct color for the object
       graphics.setColor(body.color)
 
