@@ -63,7 +63,7 @@ object GUI extends SimpleSwingApplication {
       //update planet info labels every 5th frame
       def actionPerformed(e: java.awt.event.ActionEvent) = {
         frames += 1
-        if(frames % 5 == 0) updatePlaneInfo()
+        if (frames % 5 == 0) updatePlaneInfo()
         if (frames % 100 == 0) {
           println("fps " + fps(lastFPSupdate, 100))
           lastFPSupdate = System.nanoTime
@@ -104,13 +104,21 @@ object GUI extends SimpleSwingApplication {
     (fullPanel, (topButtons ++ leftButtons), topTextFields, infoLabels, infoDropDown)
   }
 
+  //Make input double a string with x significant digits and return it in scientific notation
+  def customStringFormat(num: Double, significant: Int): String = {
+    val sign = if (num < 0) "-" else ""
+    val decimals = num.toString.filterNot(char => char == '.' || char == '-')
+    val exponent = if (num.toString.contains('E')) num.toString.dropWhile(_ != 'E').drop(1).toInt else num.toInt.toString.length - 1
+    s"$sign${decimals.head}.${decimals.slice(1, significant)}e$exponent"
+  }
+
   //Helper method for getting information of currently selected planet
   //Returns sequence of labels that have the information
   def getPlanetInfo(infoDropDown: ComboBox[String], simulation: SolarSim): Seq[Label] = {
     val planet = simulation.bodies.find(_.name == infoDropDown.item).getOrElse(throw new Exception("Unknown planet in dropDown"))
-    Seq(new Label("lx %.6f".format(planet.location.x)), new Label("vx %.6f".format(planet.velocity.x)),
-      new Label("ly %.6f".format(planet.location.y)), new Label("vy %.6f".format(planet.velocity.y)),
-      new Label("lz %.6f".format(planet.location.z)), new Label("vz %.6f".format(planet.velocity.z)))
+    Seq(new Label(s"lx ${customStringFormat(planet.location.x, 6)}"), new Label(s"vx ${customStringFormat(planet.velocity.x, 6)}"),
+      new Label(s"ly ${customStringFormat(planet.location.y, 6)}"), new Label(s"vy ${customStringFormat(planet.velocity.y, 6)}"),
+      new Label(s"lz ${customStringFormat(planet.location.z, 6)}"), new Label(s"vz ${customStringFormat(planet.velocity.z, 6)}"))
   }
 
   /** Creates the left segment of the screen where there are buttons and text boxes */
