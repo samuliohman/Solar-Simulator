@@ -28,8 +28,9 @@ object GUI extends SimpleSwingApplication {
     }
 
     def updatePlaneInfo(): Unit = {
-      val newInfoLabels = getPlanetInfo(this.infoDropdown, simulation)
+      val newInfoLabels = getPlanetPositionLabels(this.infoDropdown, simulation)
       for (i <- newInfoLabels.indices) infoLabels(i).text = newInfoLabels(i).text
+      infoLabels.last.text = getPlanetMassLabel(this.infoDropdown, simulation).head.text
     }
 
     //Sets the size of the simulation screen (which doesn't contain left and top bar)
@@ -114,11 +115,16 @@ object GUI extends SimpleSwingApplication {
 
   //Helper method for getting information of currently selected planet
   //Returns sequence of labels that have the information
-  def getPlanetInfo(infoDropDown: ComboBox[String], simulation: SolarSim): Seq[Label] = {
+  def getPlanetPositionLabels(infoDropDown: ComboBox[String], simulation: SolarSim): Seq[Label] = {
     val planet = simulation.bodies.find(_.name == infoDropDown.item).getOrElse(throw new Exception("Unknown planet in dropDown"))
     Seq(new Label(s"lx ${customStringFormat(planet.location.x, 6)}"), new Label(s"vx ${customStringFormat(planet.velocity.x, 6)}"),
       new Label(s"ly ${customStringFormat(planet.location.y, 6)}"), new Label(s"vy ${customStringFormat(planet.velocity.y, 6)}"),
       new Label(s"lz ${customStringFormat(planet.location.z, 6)}"), new Label(s"vz ${customStringFormat(planet.velocity.z, 6)}"))
+  }
+  //Returns the planets mass in a label sequence with one instance.
+  def getPlanetMassLabel(infoDropDown: ComboBox[String], simulation: SolarSim): Seq[Label] = {
+    val planet = simulation.bodies.find(_.name == infoDropDown.item).getOrElse(throw new Exception("Unknown planet in dropDown"))
+    Seq(new Label(s"Mass: ${planet.mass}"))
   }
 
   /** Creates the left segment of the screen where there are buttons and text boxes */
@@ -133,13 +139,14 @@ object GUI extends SimpleSwingApplication {
     val infoDropDown = new ComboBox(simulation.bodies.map(_.name))
     infoDropDown.maximumSize = new Dimension(440, 40)
     val infoGrid = new GridPanel(3, 2)
-    val infoLabels: Seq[Label] = getPlanetInfo(infoDropDown, simulation)
+    val infoLabels: Seq[Label] = getPlanetPositionLabels(infoDropDown, simulation)
     infoLabels.foreach(infoGrid.contents += _)
 
     //Creates the lower part of the left bar where input for creating new object is typed
     val infoText = new Label("Here you can create new planet:")
     val creationGrid = new GridPanel(4, 1)
-    creationGrid.contents += new Label("mass: 230234")
+    val massLabel = getPlanetMassLabel(infoDropDown, simulation)
+    creationGrid.contents += massLabel.head
     creationGrid.contents += new Label("")
     creationGrid.contents += new Label("")
     creationGrid.contents += infoText
@@ -181,7 +188,7 @@ object GUI extends SimpleSwingApplication {
     verticalPanel.contents += creationGrid2
     verticalPanel.contents += lowGrid
 
-    (verticalPanel, Seq(button), infoLabels, infoDropDown)
+    (verticalPanel, Seq(button), infoLabels ++ massLabel, infoDropDown)
   }
 
 

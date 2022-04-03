@@ -9,6 +9,7 @@ class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: I
   bodies += new Body("Sun", 1.99847e30, Color.yellow, Vector3D(0, 0, 0), Vector3D(0, 0, 0))
   bodies += new Body("Earth", 5.9722e24, Color.green, Vector3D(0, 150e9, 0), Vector3D(30000, 0, 0))
   bodies += new Body("Satellite", 5e5, Color.cyan, Vector3D(30e9, 50e9, 0), Vector3D(30000, -50000, 0))
+  bodies += new Body("Satellite2", 5e5, Color.red, Vector3D(30e9, 50e9, 10e9), Vector3D(30000, -40000, 15000))
 
   //Some helper attributes for drawing planets in correct locations
   //Set the width of simulation screen in kilometers and calculate simulation height from aspect ratio and width
