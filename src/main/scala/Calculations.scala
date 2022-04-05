@@ -9,10 +9,8 @@ object Calculations {
     val distanceCubed = OneDimensionalDif * OneDimensionalDif * OneDimensionalDif // =r^3
 
     val forceWithoutRComponent = GRAVITATIONAL_CONSTANT * b1.mass * b2.mass / distanceCubed //=Gc * m1 * m2 / r^3
-    val fx = difInPosition.x * forceWithoutRComponent //forceWithoutRComponent * rx
-    val fy = difInPosition.y * forceWithoutRComponent //forceWithoutRComponent * ry
-    val fz = difInPosition.z * forceWithoutRComponent //forceWithoutRComponent * rz
-    Vector3D(fx, fy, fz)
+    //forceWithoutRComponent * rc for each component x,y and z
+    Vector3D(difInPosition.x * forceWithoutRComponent, difInPosition.y * forceWithoutRComponent, difInPosition.z * forceWithoutRComponent)
   }
 
   def calculateForces(current: Body, bodies: Seq[Body]): Vector3D = {

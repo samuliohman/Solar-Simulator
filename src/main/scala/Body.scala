@@ -1,6 +1,6 @@
 import java.awt.Color
 
-class Body(val name: String, val mass: Double, val color: Color, paramLocation: Vector3D, paramVelocity: Vector3D) {
+class Body(val name: String, val mass: Double, val radius: Double, val color: Color, paramLocation: Vector3D, paramVelocity: Vector3D) {
   private var pLocation = paramLocation
   private var pVelocity = paramVelocity
 
