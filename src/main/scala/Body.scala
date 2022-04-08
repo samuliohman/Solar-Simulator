@@ -9,8 +9,14 @@ class Body(val name: String, val mass: Double, val radius: Double, val color: Co
   def velocity = pVelocity
 
   //Changes the location of the planet based on velocity and elapsed time
-  def move(time: Double) = pLocation = pLocation + (pVelocity * Vector3D(time, time, time))
+  def move(time: Double) = pLocation = pLocation + (pVelocity * time)
 
   //Changes the velocity of the planet based on applied force
   def applyForce(force: Vector3D, time: Double) = pVelocity = pVelocity + ((force / mass) * time)
+
+  //Method for applying Runge Kutta average change in location and in velocity
+  def applyVelocity(derivative: (Vector3D, Vector3D), dt: Double) = {
+    pLocation = pLocation + derivative._1 * dt
+    pVelocity = pVelocity + derivative._2 * dt
+  }
 }

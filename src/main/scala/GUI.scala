@@ -14,9 +14,6 @@ object GUI extends SimpleSwingApplication {
 
     /** Creates the part of the screen where the simulations occurs */
     val simulationScreen = new Panel {
-      focusable = true
-      requestFocus()
-
       //Overriding the default method enables us to draw our own graphics.
       override def paintComponent(g: Graphics2D): Unit = {
         simulation.update(System.nanoTime - mostRecentFrame)
@@ -43,7 +40,6 @@ object GUI extends SimpleSwingApplication {
 
     //Add listener to react to button clicks
     allButtons.foreach(listenTo(_))
-    listenTo(simulationScreen.keys)
     reactions += {
       case ButtonClicked(b) => b.text match {
         case "Apply time step" => simulation.changeTimeStep(allTextFields.head.text)

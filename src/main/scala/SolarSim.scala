@@ -81,9 +81,8 @@ class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: I
   //Updates the position and velocities of all the bodies in the simulation
   def update(timeElapsed: Long): Unit = {
     val elapsedInSeconds = 1.0 * timeElapsed / 1e9
-    for (body <- bodies) {
-      body.applyForce(Calculations.calculateForces(body, bodies.toSeq), timeStep * elapsedInSeconds)
-      body.move(timeStep * elapsedInSeconds)
-    }
+    val dt = timeStep * elapsedInSeconds
+    val derivatives = Calculations.calculateAccelerationRK4(bodies.toSeq, dt)
+    bodies.indices.foreach(i => bodies(i).applyVelocity(derivatives(i), dt))
   }
 }
