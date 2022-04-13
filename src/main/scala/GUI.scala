@@ -1,5 +1,5 @@
 import java.awt.event.ActionListener
-import scala.swing.{TextField, _}
+import scala.swing._
 import scala.swing.event.ButtonClicked
 
 object GUI extends SimpleSwingApplication {
@@ -22,6 +22,7 @@ object GUI extends SimpleSwingApplication {
       }
     }
 
+    //Updates the text boxes on the left that display information about the current planet
     def updatePlanetInfo(): Unit = {
       currentPlanetName = this.dropdownMenus.head.item
       val newInfoLabels = getPlanetPositionLabels(currentPlanetName, simulation)
@@ -92,7 +93,7 @@ object GUI extends SimpleSwingApplication {
       val asDoubles = creationTextBoxes.take(7).map(_.text.toDouble)
       val location = Vector3D(asDoubles.head, asDoubles(2), asDoubles(4)) + planet.location
       val velocity = Vector3D(asDoubles(1), asDoubles(3), asDoubles(5)) + planet.velocity
-      simulation.addBody(creationTextBoxes.last.text, asDoubles.last, location, velocity)
+      simulation.addBody(creationTextBoxes.last.text, asDoubles.last, 0, location, velocity)
 
       /** TODO Not working yet */
       //updateDropdows(dropdowns, creationTextBoxes.last.text)

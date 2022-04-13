@@ -8,12 +8,8 @@ class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: I
   private var zoom = 1.0
   val defaultSimulationWidth = 680e9
   val bodies = mutable.Buffer[Body]()
-  bodies += new Body("Sun", 1.99847e30, 696000000, Color.yellow, Vector3D(0, 0, 0), Vector3D(0, 0, 0))
-  bodies += new Body("Earth", 5.9722e24, 6356750, Color.green, Vector3D(0, 150e9, 0), Vector3D(30000, 0, 0))
-  bodies += new Body("Moon", 7.9722e22, 1783000, Color.WHITE, Vector3D(0, 350e6 + 150e9, 0), Vector3D(30000 - 1000, 0, 0))
-  bodies += new Body("Satellite", 5e5, 100, Color.cyan, Vector3D(30e9, 50e9, 0), Vector3D(30000, -50000, 0))
-  bodies += new Body("Satellite2", 5e5, 100, Color.red, Vector3D(30e9, 50e9, 10e9), Vector3D(30000, -40000, 15000))
-
+  //Load planets from a file
+  FileHandler.loadPlanetsFromFile("C:\\Users\\samul\\Desktop\\SolarSim\\src\\main\\scala\\planetInfoBasic.txt", this)
 
   //Function for updating camera angle
   def changeViewAngle(newAngle: String) = viewAngle = newAngle
@@ -27,8 +23,8 @@ class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: I
   def changeZoom(zoomCoefficient: Double) = this.zoom = this.zoom * zoomCoefficient
 
   //Add new body to the simulation
-  def addBody(name: String, mass: Double, location: Vector3D, velocity: Vector3D) =
-    bodies += new Body(name, mass, math.pow(mass / 4000 * 3 / (4 * math.Pi), 1.0 / 3), Color.white, location, velocity)
+  def addBody(name: String, mass: Double, radius: Double, location: Vector3D, velocity: Vector3D, color: Color = Color.white) =
+    bodies += new Body(name, mass, math.pow(mass / 4000 * 3 / (4 * math.Pi), 1.0 / 3), location * 1000, velocity * 1000, color)
 
   //Function that takes coordinates in meters as paremeter and the planet size and return coordinates in pixels
   def coordinatesToPixels(location: Vector3D, size: Double, relativeTo: Vector3D): Vector3D = {
