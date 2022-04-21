@@ -1,50 +1,58 @@
 import java.awt.Color
-import java.io.{BufferedReader, FileNotFoundException, FileReader, IOException}
+import java.io.{BufferedReader, BufferedWriter, FileNotFoundException, FileReader, FileWriter, IOException}
 
 object FileHandler {
   def createPlanetFromString(info: String, simulation: SolarSim) = {
     val splitted = info.split(",")
-    println(splitted(1).toDouble +" "+splitted(2).toDouble +" "+splitted(3).toDouble +" "+splitted(4).toDouble)
-    val color = splitted.last match {
-      case "yellow" => Color.yellow
-      case "green" => Color.green
-      case "orange" => Color.orange
-      case "lightGray" => Color.lightGray
-      case "brown" => new Color(153,102,0)
-      case "lightBlue" => new Color(51,204,255)
-      case "gold" => new Color(255,204,51)
-      case _ => Color.white
+    val color = new Color(splitted.last.toInt)
+    try {
+      simulation.addBody(splitted.head, splitted(1).toDouble, splitted(2).toDouble,
+        Vector3D(splitted(3).toDouble, splitted(4).toDouble, splitted(5).toDouble),
+        Vector3D(splitted(6).toDouble, splitted(7).toDouble, splitted(8).toDouble),
+        color)
     }
-
-    try{
-    simulation.addBody(splitted.head, splitted(1).toDouble, splitted(2).toDouble,
-      Vector3D(splitted(3).toDouble, splitted(4).toDouble, splitted(5).toDouble),
-      Vector3D(splitted(6).toDouble, splitted(7).toDouble, splitted(8).toDouble),
-      color)
-    }
-    catch{
+    catch {
       case e: Exception => throw new Exception("File's data not in correct form")
     }
   }
 
   def loadPlanetsFromFile(fileName: String, simulation: SolarSim) = {
-    val fileReader = try{
+    val fileReader = try {
       new FileReader(fileName)
-    }catch{
+    } catch {
       case e: FileNotFoundException => throw new Exception("Planet input file not found")
     }
     val lineReader = new BufferedReader(fileReader)
-    try{
+    try {
       var inputLine = lineReader.readLine()
-      while(inputLine != null){
+      while (inputLine != null) {
         createPlanetFromString(inputLine, simulation)
         inputLine = lineReader.readLine()
       }
-    }catch{
+    } catch {
       case e: IOException => throw new Exception("Error reading the file")
     }
-    fileReader.close()
     lineReader.close()
+    fileReader.close()
   }
-  def saveSimulationToFile = ???
+
+  def saveSimulationToFile(fileName: String, simulation: SolarSim) = {
+    val fileWriter = try {
+      new FileWriter(fileName)
+    } catch {
+      case e: FileNotFoundException => throw new Exception("Error opening save file")
+    }
+    val lineWriter = new BufferedWriter(fileWriter)
+    try {
+      for (planet <- simulation.bodies) {
+        val otherInfo = s"${planet.name},${planet.mass},${planet.radiusReal}"
+        val color = if (planet == simulation.bodies.last) planet.color.getRGB else planet.color.getRGB.toString + "\n"
+        lineWriter.write(s"$otherInfo,${(planet.location / 1000.0).componentsAsString},${(planet.velocity / 1000.0).componentsAsString},$color")
+      }
+    } catch {
+      case e: IOException => throw new Exception("Error writing to file")
+    }
+    lineWriter.close()
+    fileWriter.close()
+  }
 }

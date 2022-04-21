@@ -27,7 +27,9 @@ object GUI extends SimpleSwingApplication {
       currentPlanetName = this.dropdownMenus.head.item
       val newInfoLabels = getPlanetPositionLabels(currentPlanetName, simulation)
       for (i <- newInfoLabels.indices) infoLabels(i).text = newInfoLabels(i).text
-      infoLabels.last.text = getPlanetMassLabel(currentPlanetName, simulation).head.text
+      val massAndTime = getPlanetMassAndTimeInSimLabel(currentPlanetName, simulation)
+      infoLabels.dropRight(1).last.text = massAndTime.head.text
+      infoLabels.last.text = massAndTime.last.text
     }
 
     //Sets the size of the simulation screen (which doesn't contain left and top bar)
@@ -45,6 +47,7 @@ object GUI extends SimpleSwingApplication {
       case ButtonClicked(b) => b.text match {
         case "Apply time step" => simulation.changeTimeStep(allTextFields.head.text)
         case "Create new planet" => createNewPlanet(allTextFields.drop(1), dropdownMenus, simulation)
+        case "save" => FileHandler.saveSimulationToFile(simulation.saveLocation, simulation)
         case "xy -plane" => simulation.changeViewAngle("xy")
         case "xz -plane" => simulation.changeViewAngle("xz")
         case "yz -plane" => simulation.changeViewAngle("yz")
@@ -91,23 +94,14 @@ object GUI extends SimpleSwingApplication {
     val planet = simulation.bodies.find(_.name == dropdowns.last.item).getOrElse(throw new Exception("Unknown planet in dropDown"))
     try {
       val asDoubles = creationTextBoxes.take(7).map(_.text.toDouble)
-      val location = Vector3D(asDoubles.head, asDoubles(2), asDoubles(4)) + planet.location
-      val velocity = Vector3D(asDoubles(1), asDoubles(3), asDoubles(5)) + planet.velocity
+      val location = Vector3D(asDoubles.head, asDoubles(2), asDoubles(4)) + (planet.location / 1000)
+      val velocity = Vector3D(asDoubles(1), asDoubles(3), asDoubles(5)) + (planet.velocity / 1000)
       simulation.addBody(creationTextBoxes.last.text, asDoubles.last, 0, location, velocity)
-
-      /** TODO Not working yet */
-      //updateDropdows(dropdowns, creationTextBoxes.last.text)
     }
     catch {
       case e: Exception => throw new Exception("No doubles in creation input fields")
     }
   }
-
-  //Adds new planets to the comboboxes
-
-  /** TODO NOT WORKING YET */
-  def updateDropdows(dropdowns: Seq[ComboBox[String]], newPlanetName: String) =
-    dropdowns.foreach(_.peer.addItem(newPlanetName))
 
   //Make input double a string with x significant digits and return it in scientific notation
   def customStringFormat(num: Double, significant: Int): String = {
@@ -126,9 +120,10 @@ object GUI extends SimpleSwingApplication {
       new Label(s"lz ${customStringFormat(planet.location.z, 6)}"), new Label(s"vz ${customStringFormat(planet.velocity.z, 6)}"))
   }
 
-  //Returns the planets mass in a label sequence with one instance.
-  def getPlanetMassLabel(planetName: String, simulation: SolarSim): Seq[Label] =
-    Seq(new Label(s"Mass: ${simulation.bodies.find(_.name == planetName).getOrElse(throw new Exception("Unknown planet in dropDown")).mass}"))
+  //Returns the planets mass and the time that the simulation has run.
+  def getPlanetMassAndTimeInSimLabel(planetName: String, simulation: SolarSim): Seq[Label] =
+    Seq(new Label(s"Mass: ${simulation.bodies.find(_.name == planetName).getOrElse(throw new Exception("Unknown planet in dropDown")).mass}"),
+        new Label("Time: %.2f days".format(simulation.getTimeRun)))
 
 
   /** Here we create all the different buttons and text boxes for the GUI --------------------------------------------- */
@@ -167,9 +162,9 @@ object GUI extends SimpleSwingApplication {
     //Creates the lower part of the left bar where input for creating new object is typed
     val infoText = new Label("Here you can create new planet:")
     val creationGrid = new GridPanel(4, 1)
-    val massLabel = getPlanetMassLabel(infoDropDown.item, simulation)
-    creationGrid.contents += massLabel.head
-    creationGrid.contents += new Label("")
+    val massAndTimeLabels = getPlanetMassAndTimeInSimLabel(infoDropDown.item, simulation)
+    creationGrid.contents += massAndTimeLabels.head
+    creationGrid.contents += massAndTimeLabels.last
     creationGrid.contents += new Label("")
     creationGrid.contents += infoText
 
@@ -203,16 +198,17 @@ object GUI extends SimpleSwingApplication {
       creationGrid2.contents += flow
     }
 
-    val allButtons = Seq(new Button("Create new planet"), new Button("+"), new Button("-"))
-
+    val allButtons = Seq(new Button("Create new planet"), new Button("+"), new Button("-"), new Button("save"))
     val zoomGrid1 = new GridPanel(1, 2)
-    val zoomGrid2 = new GridPanel(2, 1)
+    val bottomLeft = new GridPanel(4, 1)
 
     //Creating zoom buttons and labe
     zoomGrid1.contents += allButtons(1)
     zoomGrid1.contents += allButtons(2)
-    zoomGrid2.contents += new Label("Zoom")
-    zoomGrid2.contents += zoomGrid1
+    bottomLeft.contents += new Label("Zoom")
+    bottomLeft.contents += zoomGrid1
+    bottomLeft.contents += new Label("Save to " + simulation.saveLocation)
+    bottomLeft.contents += allButtons(3)
 
     //combines all of the components
     val verticalPanel = new BoxPanel(Orientation.Vertical)
@@ -226,9 +222,9 @@ object GUI extends SimpleSwingApplication {
     verticalPanel.contents += createDropDown
     verticalPanel.contents += creationGrid2
     verticalPanel.contents += lowGrid
-    verticalPanel.contents += zoomGrid2
+    verticalPanel.contents += bottomLeft
 
-    (verticalPanel, allButtons, infoLabels ++ massLabel, Seq(infoDropDown, createDropDown), creationBoxes)
+    (verticalPanel, allButtons, infoLabels ++ massAndTimeLabels, Seq(infoDropDown, createDropDown), creationBoxes)
   }
 
 
@@ -250,7 +246,7 @@ object GUI extends SimpleSwingApplication {
     camPanel.contents += camButtons
 
     //Creating the buttons and text box concerning the adjustment of time step
-    val timeStepLabel = new Label("Time step")
+    val timeStepLabel = new Label("Time step (days per real seconds)")
     timeStepLabel.peer.setFont(timeStepLabel.peer.getFont.deriveFont(0, labelFontSize))
     val timeStepTextField = new TextField("300.0", 25)
     //Adds time step elements to a panel

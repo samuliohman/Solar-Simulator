@@ -27,4 +27,12 @@ trait fullVector3D {
   def /(another: fullVector3D) = operation(another, (a, b) => a / b)
 
   def /(mult: Double) = operation(Vector3D(mult, mult, mult), (a, b) => a / b)
+
+  def distance(other: Vector3D):Double = {
+    val dif = other - this
+    val distance = math.sqrt(dif.x * dif.x + dif.y * dif.y +  dif.z * dif.z)
+    distance
+  }
+
+  def componentsAsString = s"$x,$y,$z"
 }
