@@ -3,7 +3,7 @@ import scala.collection.mutable
 import scala.swing.Graphics2D
 
 class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: Int) {
-  private var timeStep: Double = 1 * 86400 // 86400 seconds in one day, so default speed of simulation is x days per second
+  private var timeStep: Double = 1 * 86400 // 86400 seconds in one day, so default speed of simulation is 1 days per second
   private var timeRun = 0.0
   private var viewAngle = "xy" //Set default view angle
   private var zoom = 1.0
@@ -11,8 +11,8 @@ class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: I
   val bodies = mutable.Buffer[Body]()
 
   //Location for saving file and the location from which the simulation is loaded
-  val saveLocation = "src/main/scala/SaveFiles/SolarSimSaved.txt"
-  FileHandler.loadPlanetsFromFile("src/main/scala/SaveFiles/planetInfoBasic.txt", this)
+  val saveLocation = "./src/main/scala/SaveFiles/SolarSimSaved.txt"
+  FileHandler.loadPlanetsFromFile("./src/main/scala/SaveFiles/planetInfoBasic.txt", this)
 
   //Function for updating camera angle
   def changeViewAngle(newAngle: String) = viewAngle = newAngle
@@ -29,8 +29,8 @@ class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: I
   def changeZoom(zoomCoefficient: Double) = this.zoom = this.zoom * zoomCoefficient
 
   //Add new body to the simulation
-  def addBody(name: String, mass: Double, radius: Double, location: Vector3D, velocity: Vector3D, color: Color = Color.white) =
-    bodies += new Body(name, mass, radius, math.pow(mass / 4000 * 3 / (4 * math.Pi), 1.0 / 3), location * 1000, velocity * 1000, color)
+  def addBody(name: String, mass: Double, radiusReal: Double, location: Vector3D, velocity: Vector3D, color: Color = Color.white) =
+    bodies += new Body(name, mass, radiusReal, math.pow(mass / 4000 * 3 / (4 * math.Pi), 1.0 / 3), location * 1000, velocity * 1000, color)
 
   //Function that takes coordinates in meters as paremeter and the planet size and return coordinates in pixels
   def coordinatesToPixels(location: Vector3D, size: Double, relativeTo: Vector3D): Vector3D = {
@@ -51,8 +51,10 @@ class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: I
 
   //Paints all the bodies in the simulation
   def paint(graphics: Graphics2D, planetName: String): Unit = {
+    val bodiesCopy = bodies.map(_.copy).toSeq
+
     //Get currently selected planet relative to which all other planets are rendered
-    val selectedPlanet = if (bodies.map(_.name).contains(planetName)) bodies.find(_.name == planetName).get.location else Vector3D(0, 0, 0)
+    val selectedPlanet = if (bodiesCopy.map(_.name).contains(planetName)) bodiesCopy.find(_.name == planetName).get.location else Vector3D(0, 0, 0)
 
     // Paint on the background with bright blue
     graphics.setColor(new Color(39, 40, 49))
@@ -62,7 +64,7 @@ class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: I
     graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
     //Sort all the bodies according to viewAngle so that a correct body is drawn on top of the body which is "underneath"
-    val bodiesSorted = bodies.sortBy(body => viewAngle match {
+    val bodiesSorted = bodiesCopy.sortBy(body => viewAngle match {
       case "xy" => body.location.z
       case "xz" => body.location.y
       case "yz" => body.location.x
@@ -85,6 +87,6 @@ class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: I
     val dt = timeStep * elapsedInSeconds
     timeRun += dt
     val derivatives = Calculations.calculateAccelerationRK4(bodies.toSeq, dt)
-    bodies.indices.foreach(i => bodies(i).applyVelocity(derivatives(i), dt, bodies(i), this))
+    bodies.zipWithIndex.foreach { case (body, i) => body.applyVelocityAndAcceleration(derivatives(i), dt, body, this) }
   }
 }

@@ -37,6 +37,7 @@ object FileHandler {
   }
 
   def saveSimulationToFile(fileName: String, simulation: SolarSim) = {
+    def componentsAsString(v: Vector3D) = s"${v.x},${v.y},${v.z}"
     val fileWriter = try {
       new FileWriter(fileName)
     } catch {
@@ -47,7 +48,7 @@ object FileHandler {
       for (planet <- simulation.bodies) {
         val otherInfo = s"${planet.name},${planet.mass},${planet.radiusReal}"
         val color = if (planet == simulation.bodies.last) planet.color.getRGB else planet.color.getRGB.toString + "\n"
-        lineWriter.write(s"$otherInfo,${(planet.location / 1000.0).componentsAsString},${(planet.velocity / 1000.0).componentsAsString},$color")
+        lineWriter.write(s"$otherInfo,${componentsAsString(planet.location / 1000.0)},${componentsAsString(planet.velocity / 1000.0)},$color")
       }
     } catch {
       case e: IOException => throw new Exception("Error writing to file")
