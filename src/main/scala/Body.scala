@@ -15,7 +15,7 @@ class Body(val name: String, val mass: Double, val radiusReal: Double, val radiu
     val otherBodies = simulation.bodies.diff(Seq(currentBody))
     //Check if new position collides with other planets
     if (otherBodies.exists(other => ((other.radiusReal + currentBody.radiusReal) > other.location.distance(currentBody.location)))) {
-      simulation.changeTimeStep("0")
+      simulation.changeTimeStepSize("0")
       println("Simulation ended because collision occured")
     } else {
       pLocation = pLocation + velocityAndAcceleration._1 * dt

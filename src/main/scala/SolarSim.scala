@@ -3,16 +3,24 @@ import scala.collection.mutable
 import scala.swing.Graphics2D
 
 class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: Int) {
-  private var timeStep: Double = 1 * 86400 // 86400 seconds in one day, so default speed of simulation is 1 days per second
-  private var timeRun = 0.0
-  private var viewAngle = "xy" //Set default view angle
-  private var zoom = 1.0
-  val defaultSimulationWidth = 680e9
-  val bodies = mutable.Buffer[Body]()
-
+  /** USER CAN ADJUST THE FOLLOWING */
   //Location for saving file and the location from which the simulation is loaded
   val saveLocation = "./src/main/scala/SaveFiles/SolarSimSaved.txt"
-  FileHandler.loadPlanetsFromFile("./src/main/scala/SaveFiles/planetInfoBasic.txt", this)
+  val loadLocation = "./src/main/scala/SaveFiles/planetInfoBasic.txt"
+  // 86400 seconds in one day, so default speed of simulation is 1 days per second
+  private var timeStepSize = 100.0
+  private var timeStepLength = 10.0
+  private var viewAngle = "xy" //Set default view angle (options: "xy","xz", "yz")
+  private var zoom = 1.0
+
+  /** USER SHOULD NOT CHANGE */
+  private var timeRun = 0.0
+  val defaultSimulationWidth = 680e9
+
+  //create planets from a File
+  val bodies = mutable.Buffer[Body]()
+  FileHandler.loadPlanetsFromFile(loadLocation, this)
+
 
   //Function for updating camera angle
   def changeViewAngle(newAngle: String) = viewAngle = newAngle
@@ -20,10 +28,20 @@ class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: I
   //Get time total runtime of the simulation in days
   def getTimeRun = timeRun / 86400
 
-  //Check that new time step is a double and update the time step
-  //time step scale: if time step is one, it means second in real life means a day in simulation
-  def changeTimeStep(newStep: String) =
-    if (newStep.toDoubleOption.nonEmpty) timeStep = newStep.toDouble * 86400 else throw new Exception("Time step must be a double")
+  def getTimeStepSize = timeStepSize
+
+  def getTimeStepLength = timeStepLength
+
+  //Check that new time step size is a double and update the time step
+  def changeTimeStepSize(newStep: String) =
+    if (newStep.toDoubleOption.nonEmpty) timeStepSize = newStep.toDouble else throw new Exception("Time step must be a double")
+
+  //Check that new time step length is a double and update the time step
+  def changeTimeStepLength(newStep: String) = {
+    if (newStep.toDoubleOption.nonEmpty) {
+      if (newStep.toDouble < 0.0001) timeStepLength = -10 else timeStepLength = newStep.toDouble
+    } else throw new Exception("Time step must be a double")
+  }
 
   //Change current zoom. Coefficient > 1 => zoom out and coefficient < 1 => zoom in
   def changeZoom(zoomCoefficient: Double) = this.zoom = this.zoom * zoomCoefficient
@@ -82,11 +100,9 @@ class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: I
   }
 
   //Updates the position and velocities of all the bodies in the simulation
-  def update(timeElapsed: Long): Unit = {
-    val elapsedInSeconds = 1.0 * timeElapsed / 1e9
-    val dt = timeStep * elapsedInSeconds
-    timeRun += dt
-    val derivatives = Calculations.calculateAccelerationRK4(bodies.toSeq, dt)
-    bodies.zipWithIndex.foreach { case (body, i) => body.applyVelocityAndAcceleration(derivatives(i), dt, body, this) }
+  def update(): Unit = {
+    timeRun += timeStepSize
+    val derivatives = Calculations.calculateAccelerationRK4(bodies.toSeq, timeStepSize)
+    bodies.zipWithIndex.foreach { case (body, i) => body.applyVelocityAndAcceleration(derivatives(i), timeStepSize, body, this) }
   }
 }

@@ -41,14 +41,15 @@ object GUI extends SimpleSwingApplication {
     allButtons.foreach(listenTo(_))
     reactions += {
       case ButtonClicked(b) => b.text match {
-        case "Apply time step" => simulation.changeTimeStep(allTextFields.head.text)
-        case "Create new planet" => {newBodyCreated = true}
+        case "Apply step size" => simulation.changeTimeStepSize(allTextFields.head.text)
+        case "Apply step length" => simulation.changeTimeStepLength(allTextFields(1).text)
+        case "Create new planet" => newBodyCreated = true
         case "save" => FileHandler.saveSimulationToFile(simulation.saveLocation, simulation)
         case "xy -plane" => simulation.changeViewAngle("xy")
         case "xz -plane" => simulation.changeViewAngle("xz")
         case "yz -plane" => simulation.changeViewAngle("yz")
-        case "+" => simulation.changeZoom(0.9)
-        case "-" => simulation.changeZoom(1.1)
+        case "+" => simulation.changeZoom(0.7)
+        case "-" => simulation.changeZoom(1.3)
         case _ =>
       }
     }
@@ -82,21 +83,24 @@ object GUI extends SimpleSwingApplication {
         var lastFPSupdate2 = System.nanoTime
         var simThreadFrames = 0
         while (true) {
+          //Creating new object in simulation thread to avoid errors in using same object in different threads
           if (newBodyCreated) {
-            createNewPlanet(allTextFields.drop(1), dropdownMenus, simulation)
+            createNewPlanet(allTextFields.drop(2), dropdownMenus, simulation)
             newBodyCreated = false
           }
-
           //Printing the thread's fps
           simThreadFrames += 1
-          val (newFrame, newTime) = printFps(lastFPSupdate2, simThreadFrames, 10000, "fps(SimThread)")
+          val framesPerFPSPrint = if (simulation.getTimeStepLength > 0) (2000 / simulation.getTimeStepLength).toInt else 10000
+          val (newFrame, newTime) = printFps(lastFPSupdate2, simThreadFrames, framesPerFPSPrint, "fps(SimThread)")
           simThreadFrames = newFrame
           lastFPSupdate2 = newTime
 
           //Updating simulation
           val elapsedTime = System.nanoTime - lastFrame
+          val sleepAmount = (simulation.getTimeStepLength - (elapsedTime / 1e6)).toInt
+          if (sleepAmount > 0) Thread.sleep(sleepAmount)
           lastFrame = System.nanoTime
-          simulation.update(elapsedTime)
+          simulation.update()
         }
       }
     }
@@ -112,7 +116,6 @@ object GUI extends SimpleSwingApplication {
     timer.start()
   }
 
-
   //Gives the fps as double, parameters are nanotime of last update and frames displayed since
   def printFps(oldTime: Long, currentFrame: Int, framesToPrint: Int, heading: String): (Int, Long) = {
     if (currentFrame >= framesToPrint) {
@@ -122,7 +125,7 @@ object GUI extends SimpleSwingApplication {
   }
 
   //Creates a new planet to the simulation, takes the creation text boxes on the bottom left of the screen as inputs
-  def createNewPlanet(creationTextBoxes: Seq[TextField], dropdowns: Seq[ComboBox[String]], simulation: SolarSim) = {//: (String, Double, Double, Vector3D, Vector3D) = {
+  def createNewPlanet(creationTextBoxes: Seq[TextField], dropdowns: Seq[ComboBox[String]], simulation: SolarSim) = {
     val planet = simulation.bodies.find(_.name == dropdowns.last.item).getOrElse(throw new Exception("Unknown planet in dropDown"))
     try {
       val asDoubles = creationTextBoxes.take(7).map(_.text.toDouble)
@@ -262,7 +265,7 @@ object GUI extends SimpleSwingApplication {
   /** Creates the upper segment of the screen where there are buttons and text boxes */
   //Return the layout as boxpanel, buttons used and the textfield for adjusting time step
   def createTopBar(): (BoxPanel, Seq[Button], Seq[TextField]) = {
-    val labelFontSize = 30
+    val labelFontSize = 25
 
     //Creating the buttons and text box concerning camera angles
     val camLabel = new Label("Camera angle")
@@ -277,24 +280,31 @@ object GUI extends SimpleSwingApplication {
     camPanel.contents += camButtons
 
     //Creating the buttons and text box concerning the adjustment of time step
-    val timeStepLabel = new Label("Time step (days per real seconds)")
-    timeStepLabel.peer.setFont(timeStepLabel.peer.getFont.deriveFont(0, labelFontSize))
-    val timeStepTextField = new TextField("1.0", 25)
+    val timeStepLabel = new Label("Simulation time passed per step (seconds)")
+    val timeStepTextField = new TextField("100.0")
+    buttons = buttons :+ new Button("Apply step size")
+    val timeStepLabel2 = new Label("Time step length in ms (0 for as fast as possible at around 8000fps)")
+    val timeStepTextField2 = new TextField("10.0")
+    buttons = buttons :+ new Button("Apply step length")
     //Adds time step elements to a panel
     val timeStepElements = new BoxPanel(Orientation.Horizontal)
     timeStepElements.contents += timeStepTextField
-    buttons = buttons :+ new Button("Apply time step")
     timeStepElements.contents += buttons(3)
+    val timeStepElements2 = new BoxPanel(Orientation.Horizontal)
+    timeStepElements2.contents += timeStepTextField2
+    timeStepElements2.contents += buttons(4)
     //Adds time step label and element to a panel
-    val timeStepPanel = new GridPanel(2, 0)
+    val timeStepPanel = new GridPanel(2, 2)
     timeStepPanel.contents += timeStepLabel
+    timeStepPanel.contents += timeStepLabel2
     timeStepPanel.contents += timeStepElements
+    timeStepPanel.contents += timeStepElements2
 
     //Adds all the aforementioned elements to one panel
     val horizontalPanel = new BoxPanel(Orientation.Horizontal)
     horizontalPanel.contents += camPanel
     horizontalPanel.contents += timeStepPanel
 
-    (horizontalPanel, buttons, Seq(timeStepTextField))
+    (horizontalPanel, buttons, Seq(timeStepTextField, timeStepTextField2))
   }
 }
