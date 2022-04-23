@@ -7,11 +7,10 @@ class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: I
   //Location for saving file and the location from which the simulation is loaded
   val saveLocation = "./src/main/scala/SaveFiles/SolarSimSaved.txt"
   val loadLocation = "./src/main/scala/SaveFiles/planetInfoBasic.txt"
-  // 86400 seconds in one day, so default speed of simulation is 1 days per second
-  private var timeStepSize = 100.0
-  private var timeStepLength = 10.0
+  private var timeStepSize = 100.0 //Time step size. 100 seconds by default.
+  private var timeStepLength = 10.0 //Time step length. 10 milliseconds by default.
   private var viewAngle = "xy" //Set default view angle (options: "xy","xz", "yz")
-  private var zoom = 1.0
+  private var zoom = 7.0
 
   /** USER SHOULD NOT CHANGE */
   private var timeRun = 0.0
