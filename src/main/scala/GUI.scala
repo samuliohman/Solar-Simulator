@@ -64,9 +64,10 @@ object GUI extends SimpleSwingApplication {
         lastFPSupdate = newTime
 
         //For updating simulation in drawing thread
+        /*
         val timeElapsed = System.nanoTime - lastFrame
         lastFrame = System.nanoTime
-        simulation.update(timeElapsed)
+        simulation.update(timeElapsed)*/
 
         //repainting the simulation (drawing is updated every frame and planet information on the side every 5th frame)
         simulationScreen.repaint()
