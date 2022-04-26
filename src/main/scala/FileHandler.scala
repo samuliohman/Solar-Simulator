@@ -3,9 +3,9 @@ import java.io.{BufferedReader, BufferedWriter, FileNotFoundException, FileReade
 
 object FileHandler {
   def createPlanetFromString(info: String, simulation: SolarSim) = {
-    val splitted = info.split(",")
-    val color = new Color(splitted.last.toInt)
     try {
+      val splitted = info.split(",")
+      val color = new Color(splitted.last.toInt)
       simulation.addBody(splitted.head, splitted(1).toDouble, splitted(2).toDouble,
         Vector3D(splitted(3).toDouble, splitted(4).toDouble, splitted(5).toDouble),
         Vector3D(splitted(6).toDouble, splitted(7).toDouble, splitted(8).toDouble),
@@ -38,6 +38,7 @@ object FileHandler {
 
   def saveSimulationToFile(fileName: String, simulation: SolarSim) = {
     def componentsAsString(v: Vector3D) = s"${v.x},${v.y},${v.z}"
+
     val fileWriter = try {
       new FileWriter(fileName)
     } catch {

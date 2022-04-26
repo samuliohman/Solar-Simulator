@@ -1,7 +1,7 @@
 import java.awt.Color
 
 class Body(val name: String, val mass: Double, val radiusReal: Double, val radiusLarge: Double, paramLocation: Vector3D, paramVelocity: Vector3D, val color: Color) {
-  private var pLocation = paramLocation//BigDecVector3D(BigDecimal.valueOf(paramLocation.x),BigDecimal.valueOf(paramLocation.y),BigDecimal.valueOf(paramLocation.z))
+  private var pLocation = paramLocation //BigDecVector3D(BigDecimal.valueOf(paramLocation.x),BigDecimal.valueOf(paramLocation.y),BigDecimal.valueOf(paramLocation.z))
   private var pVelocity = paramVelocity
 
   def location = pLocation

@@ -18,12 +18,16 @@ object GUI extends SimpleSwingApplication {
       //Overriding the default method enables us to draw our own graphics.
       override def paintComponent(g: Graphics2D): Unit = simulation.paint(g, currentPlanetName)
     }
+    //Sets the size of the simulation screen (which doesn't contain left and top bar)
+    simulationScreen.minimumSize = new Dimension(simulationWidth, simulationHeight)
+    simulationScreen.preferredSize = new Dimension(simulationWidth, simulationHeight)
+    simulationScreen.maximumSize = new Dimension(simulationWidth, simulationHeight)
 
     //Updates the text labels on the left that display information about the current planet
     def updatePlanetInfo(): Unit = {
       currentPlanetName = this.dropdownMenus.head.item
       val newInfoLabels = getPlanetPositionLabels(currentPlanetName, simulation)
-      for (i <- newInfoLabels.indices) infoLabels(i).text = newInfoLabels(i).text
+      for (i <- newInfoLabels.indices) infoLabels(i).text = newInfoLabels(i)
       val mass = getPlanetMassLabel(currentPlanetName, simulation)
       infoLabels.dropRight(1).last.text = mass.text
       infoLabels.last.text = "Time: %.2f days".format(simulation.getTimeRun)
@@ -31,20 +35,13 @@ object GUI extends SimpleSwingApplication {
 
     //Update the fps labels on the left side of the screen
     def updateFpsInfo(): Unit = {
-      val elapsedTime = System.nanoTime - lastFPSupdate
-      val (a,b) = (ScreenThreadUpdates, SimThreadUpdates)
+      val fpsInfo = getFPSInfo(ScreenThreadUpdates, SimThreadUpdates, System.nanoTime - lastFPSupdate)
       ScreenThreadUpdates = 0
       SimThreadUpdates = 0
       lastFPSupdate = System.nanoTime
-      val fpsInfo = getFPSInfo(a, b, elapsedTime)
       infoLabels.dropRight(3).last.text = fpsInfo._1
       infoLabels.dropRight(2).last.text = fpsInfo._2
     }
-
-    //Sets the size of the simulation screen (which doesn't contain left and top bar)
-    simulationScreen.minimumSize = new Dimension(simulationWidth, simulationHeight)
-    simulationScreen.preferredSize = new Dimension(simulationWidth, simulationHeight)
-    simulationScreen.maximumSize = new Dimension(simulationWidth, simulationHeight)
 
     //Adds the panel that has all the different elements to current window
     val (fullScreen, allButtons, allTextFields, infoLabels, dropdownMenus) = createFullScreen(simulationScreen, simulation)
@@ -67,19 +64,16 @@ object GUI extends SimpleSwingApplication {
       }
     }
 
-    //This event listener and swing timer allow periodic repetitive activity in the event listening thread.
+    //This event listener and swing timer allow periodic repetitive activity in the event listening thread. Used for drawing planets and updating GUI
     val listener = new ActionListener() {
       def actionPerformed(e: java.awt.event.ActionEvent) = {
-        //Printing the screen's fps
         frames += 1
         ScreenThreadUpdates += 1
 
-        //repainting the simulation (drawing is updated every frame and planet information on the side every 5th frame)
+        //repainting the simulation (planets are updated every frame, planet information on the side every 5th frame and fps information every 100th frame)
         simulationScreen.repaint()
-        if (frames % 5 == 0)
-          updatePlanetInfo()
-        if (frames % 300 == 0)
-          updateFpsInfo()
+        if (frames % 5 == 0) updatePlanetInfo()
+        if (frames % 300 == 0) updateFpsInfo()
       }
     }
 
@@ -110,14 +104,12 @@ object GUI extends SimpleSwingApplication {
     var SimThreadUpdates = 0
     var lastFPSupdate = System.nanoTime
 
-    //Other variables for tracting time between steps and for creating new bodies
+    //Variables for tracting time between steps and for creating new bodies
     var lastFrame = System.nanoTime
     var frames = 0
     var newBodyCreated = false
 
-    // Timer sends ActionEvent to ActionListener as often as possible,
-    // when the simulation moves forward and the screen is redrawn.
-    // This code therefore allows animation
+    // Timer sends ActionEvent to ActionListener as often as possible, this code therefore allows animation
     val timer = new javax.swing.Timer(0, listener)
     timer.start()
   }
@@ -129,7 +121,7 @@ object GUI extends SimpleSwingApplication {
     ("fps(GUI thread) %.2f".format(fps1), "fps(Sim thread) %.2f".format(fps2))
   }
 
-  //Creates a new planet to the simulation, takes the creation text boxes on the bottom left of the screen as inputs
+  //Creates a new planet to the simulation, takes the creation text boxes on the bottom left of the screen as parameters
   def createNewPlanet(creationTextBoxes: Seq[TextField], dropdowns: Seq[ComboBox[String]], simulation: SolarSim) = breakable {
     val planet = simulation.bodies.find(_.name == dropdowns.last.item).getOrElse(throw new Exception("Unknown planet in dropDown"))
     if (creationTextBoxes.last.text == "") {
@@ -159,15 +151,14 @@ object GUI extends SimpleSwingApplication {
   }
 
   //Helper method for getting information of currently selected planet
-  //Returns sequence of labels that have the information
-  def getPlanetPositionLabels(planetName: String, simulation: SolarSim): Seq[Label] = {
+  def getPlanetPositionLabels(planetName: String, simulation: SolarSim): Seq[String] = {
     val planet = simulation.bodies.find(_.name == planetName).getOrElse(throw new Exception("Unknown planet in dropDown"))
-    Seq(new Label(s"lx ${customStringFormat(planet.location.x, 6)}"), new Label(s"vx ${customStringFormat(planet.velocity.x, 6)}"),
-      new Label(s"ly ${customStringFormat(planet.location.y, 6)}"), new Label(s"vy ${customStringFormat(planet.velocity.y, 6)}"),
-      new Label(s"lz ${customStringFormat(planet.location.z, 6)}"), new Label(s"vz ${customStringFormat(planet.velocity.z, 6)}"))
+    Seq(s"lx ${customStringFormat(planet.location.x, 6)}", s"vx ${customStringFormat(planet.velocity.x, 6)}",
+      s"ly ${customStringFormat(planet.location.y, 6)}", s"vy ${customStringFormat(planet.velocity.y, 6)}",
+      s"lz ${customStringFormat(planet.location.z, 6)}", s"vz ${customStringFormat(planet.velocity.z, 6)}")
   }
 
-  //Returns the planets mass and the time that the simulation has run.
+  //Returns the planets mass in an label.
   def getPlanetMassLabel(planetName: String, simulation: SolarSim): Label =
     new Label(s"Mass: ${simulation.bodies.find(_.name == planetName).getOrElse(throw new Exception("Unknown planet in dropDown")).mass}")
 
@@ -176,7 +167,7 @@ object GUI extends SimpleSwingApplication {
 
   /** Creates a panel consisting all the different elements */
   //Returns all the different layouts combined(Boxpanel), all the different buttons used,
-  //labels that contain planet information and a dropdown that has current selected planet
+  //labels that contain planet information and dropdowns that have planet selected
   def createFullScreen(simulationScreen: Panel, simulation: SolarSim): (BoxPanel, Seq[Button], Seq[TextField], Seq[Label], Seq[ComboBox[String]]) = {
     val topAndSim = new BoxPanel(Orientation.Vertical)
     val (topBar, topButtons, topTextFields) = createTopBar()
@@ -202,7 +193,8 @@ object GUI extends SimpleSwingApplication {
     var infoDropDown = new ComboBox(simulation.bodies.map(_.name))
     infoDropDown.maximumSize = new Dimension(220, 40)
     val infoGrid = new GridPanel(3, 2)
-    val infoLabels: Seq[Label] = getPlanetPositionLabels(infoDropDown.item, simulation)
+    val infoLabels: Seq[Label] = Seq.fill(6)(new Label(""))
+    infoLabels.indices.foreach(i => infoLabels(i).text = getPlanetPositionLabels(infoDropDown.item, simulation)(i))
     infoLabels.foreach(infoGrid.contents += _)
 
     //FPS labels
@@ -305,6 +297,7 @@ object GUI extends SimpleSwingApplication {
     val timeStepLabel2 = new Label("Time step length in ms(0 for max speed at around 5000 fps)")
     val timeStepTextField2 = new TextField("10.0")
     buttons = buttons :+ new Button("Apply step length")
+
     //Adds time step elements to a panel
     val timeStepElements = new BoxPanel(Orientation.Horizontal)
     timeStepElements.contents += timeStepTextField
@@ -312,6 +305,7 @@ object GUI extends SimpleSwingApplication {
     val timeStepElements2 = new BoxPanel(Orientation.Horizontal)
     timeStepElements2.contents += timeStepTextField2
     timeStepElements2.contents += buttons(4)
+
     //Adds time step label and element to a panel
     val timeStepPanel = new GridPanel(2, 2)
     timeStepPanel.contents += timeStepLabel

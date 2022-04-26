@@ -68,12 +68,13 @@ class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: I
 
   //Paints all the bodies in the simulation
   def paint(graphics: Graphics2D, planetName: String): Unit = {
+    //Copy bodies so that another thread won't change them in the middle of drawing
     val bodiesCopy = bodies.map(_.copy).toSeq
 
     //Get currently selected planet relative to which all other planets are rendered
-    val selectedPlanet = if (bodiesCopy.map(_.name).contains(planetName)) bodiesCopy.find(_.name == planetName).get.location else Vector3D(0, 0, 0)
+    val selectedPlanet = bodiesCopy.find(_.name == planetName).getOrElse(bodies.head).location
 
-    // Paint on the background with bright blue
+    // Paint on the background with dark blue
     graphics.setColor(new Color(39, 40, 49))
     graphics.fillRect(0, 0, simulationWidthInPixels, simulationHeightInPixels)
 
@@ -101,7 +102,7 @@ class SolarSim(val simulationWidthInPixels: Int, val simulationHeightInPixels: I
   //Updates the position and velocities of all the bodies in the simulation
   def update(): Unit = {
     timeRun += timeStepSize
-    val derivatives = Calculations.calculateAccelerationRK4(bodies.toSeq, timeStepSize)
+    val derivatives = Calculations.calculateAccelerationRK4(bodies.toVector, timeStepSize)
     bodies.zipWithIndex.foreach { case (body, i) => body.applyVelocityAndAcceleration(derivatives(i), timeStepSize, body, this) }
   }
 }
